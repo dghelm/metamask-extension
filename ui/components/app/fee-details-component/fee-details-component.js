@@ -24,7 +24,7 @@ import LoadingHeartBeat from '../../ui/loading-heartbeat';
 import UserPreferencedCurrencyDisplay from '../user-preferenced-currency-display/user-preferenced-currency-display.component';
 import { PRIMARY, SECONDARY } from '../../../helpers/constants/common';
 import { addHexes } from '../../../../shared/modules/conversion.utils';
-import fetchEstimatedL1Fee from '../../../helpers/utils/optimism/fetchEstimatedL1Fee';
+import fetchEstimatedL1Fee from '../../../helpers/utils/multiLayerFee/fetchEstimatedL1Fee';
 import { useGasFeeContext } from '../../../contexts/gasFee';
 
 export default function FeeDetailsComponent({

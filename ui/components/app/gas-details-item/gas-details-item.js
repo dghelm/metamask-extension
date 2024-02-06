@@ -27,7 +27,7 @@ import Box from '../../ui/box';
 import LoadingHeartBeat from '../../ui/loading-heartbeat';
 import EditGasFeeIcon from '../edit-gas-fee-icon/edit-gas-fee-icon';
 import GasTiming from '../gas-timing/gas-timing.component';
-import fetchEstimatedL1Fee from '../../../helpers/utils/optimism/fetchEstimatedL1Fee';
+import fetchEstimatedL1Fee from '../../../helpers/utils/multiLayerFee/fetchEstimatedL1Fee';
 import TransactionDetailItem from '../transaction-detail-item/transaction-detail-item.component';
 import UserPreferencedCurrencyDisplay from '../user-preferenced-currency-display';
 
