@@ -1,20 +1,26 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { captureException } from '@sentry/browser';
+import BlockaidPackage from '@blockaid/ppom_release/package.json';
 
-import { Text } from '../../../component-library';
+import { NETWORK_TO_NAME_MAP } from '../../../../../shared/constants/network';
 import {
   OverflowWrap,
   Severity,
 } from '../../../../helpers/constants/design-system';
 import { I18nContext } from '../../../../contexts/i18n';
-
+import { useTransactionEventFragment } from '../../../../hooks/useTransactionEventFragment';
 import {
   BlockaidReason,
   BlockaidResultType,
   SecurityProvider,
 } from '../../../../../shared/constants/security-provider';
+import { Text } from '../../../component-library';
+
 import SecurityProviderBannerAlert from '../security-provider-banner-alert';
+import { getReportUrl } from './blockaid-banner-utils';
+
+const zlib = require('zlib');
 
 /** Reason to description translation key mapping. Grouped by translations. */
 const REASON_TO_DESCRIPTION_TKEY = Object.freeze({
@@ -46,14 +52,23 @@ const REASON_TO_TITLE_TKEY = Object.freeze({
   [BlockaidReason.rawSignatureFarming]: 'blockaidTitleSuspicious',
 });
 
-function BlockaidBannerAlert({ securityAlertResponse, ...props }) {
+function BlockaidBannerAlert({ txData, ...props }) {
+  const { securityAlertResponse, origin, msgParams, type, txParams, chainId } =
+    txData;
+
   const t = useContext(I18nContext);
+  const { updateTransactionEventFragment } = useTransactionEventFragment();
 
   if (!securityAlertResponse) {
     return null;
   }
 
-  const { reason, result_type: resultType, features } = securityAlertResponse;
+  const {
+    block,
+    features,
+    reason,
+    result_type: resultType,
+  } = securityAlertResponse;
 
   if (resultType === BlockaidResultType.Benign) {
     return null;
@@ -63,7 +78,9 @@ function BlockaidBannerAlert({ securityAlertResponse, ...props }) {
     captureException(`BlockaidBannerAlert: Unidentified reason '${reason}'`);
   }
 
-  const description = t(REASON_TO_DESCRIPTION_TKEY[reason] || 'other');
+  const description = t(
+    REASON_TO_DESCRIPTION_TKEY[reason] || REASON_TO_DESCRIPTION_TKEY.other,
+  );
 
   const details = features?.length ? (
     <Text as="ul" overflowWrap={OverflowWrap.BreakWord}>
@@ -73,8 +90,6 @@ function BlockaidBannerAlert({ securityAlertResponse, ...props }) {
     </Text>
   ) : null;
 
-  const isFailedResultType = resultType === BlockaidResultType.Failed;
-
   const severity =
     resultType === BlockaidResultType.Malicious
       ? Severity.Danger
@@ -82,20 +97,53 @@ function BlockaidBannerAlert({ securityAlertResponse, ...props }) {
 
   const title = t(REASON_TO_TITLE_TKEY[reason] || 'blockaidTitleDeceptive');
 
+  const reportUrl = (() => {
+    const reportData = {
+      blockNumber: block,
+      blockaidVersion: BlockaidPackage.version,
+      chain: NETWORK_TO_NAME_MAP[chainId],
+      classification: reason,
+      domain: origin ?? msgParams?.origin ?? txParams?.origin,
+      jsonRpcMethod: type,
+      jsonRpcParams: JSON.stringify(txParams ?? msgParams),
+      resultType,
+      reproduce: JSON.stringify(features),
+    };
+
+    const jsonData = JSON.stringify(reportData);
+
+    const encodedData = zlib?.gzipSync?.(jsonData) ?? jsonData;
+
+    return getReportUrl(encodedData);
+  })();
+
+  const onClickSupportLink = () => {
+    updateTransactionEventFragment(
+      {
+        properties: {
+          external_link_clicked: 'security_alert_support_link',
+        },
+      },
+      txData.id,
+    );
+  };
+
   return (
     <SecurityProviderBannerAlert
       description={description}
       details={details}
-      provider={isFailedResultType ? null : SecurityProvider.Blockaid}
+      provider={SecurityProvider.Blockaid}
+      reportUrl={reportUrl}
       severity={severity}
       title={title}
+      onClickSupportLink={onClickSupportLink}
       {...props}
     />
   );
 }
 
 BlockaidBannerAlert.propTypes = {
-  securityAlertResponse: PropTypes.object,
+  txData: PropTypes.object,
 };
 
 export default BlockaidBannerAlert;

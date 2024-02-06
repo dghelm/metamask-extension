@@ -1,18 +1,18 @@
 import { ApprovalType } from '@metamask/controller-utils';
 import { createSelector } from 'reselect';
 import {
+  TransactionStatus,
+  TransactionType,
+} from '@metamask/transaction-controller';
+import {
   PRIORITY_STATUS_HASH,
   PENDING_STATUS_HASH,
 } from '../helpers/constants/transactions';
 import txHelper from '../helpers/utils/tx-helper';
-import {
-  TransactionStatus,
-  TransactionType,
-  SmartTransactionStatus,
-} from '../../shared/constants/transaction';
+import { SmartTransactionStatus } from '../../shared/constants/transaction';
 import { hexToDecimal } from '../../shared/modules/conversion.utils';
 import { getProviderConfig } from '../ducks/metamask/metamask';
-import { getCurrentChainId, getSelectedAddress } from './selectors';
+import { getCurrentChainId, getSelectedInternalAccount } from './selectors';
 import { hasPendingApprovals, getApprovalRequestsByType } from './approvals';
 import { createDeepEqualSelector } from './util';
 
@@ -33,9 +33,9 @@ export const getCurrentNetworkTransactions = createDeepEqualSelector(
 
     const { chainId } = getProviderConfig(state);
 
-    return transactions.filter(
-      (transaction) => transaction.chainId === chainId,
-    );
+    return transactions
+      .filter((transaction) => transaction.chainId === chainId)
+      .sort((a, b) => a.time - b.time); // Ascending
   },
   (transactions) => transactions,
 );
@@ -56,6 +56,19 @@ export const getUnapprovedTransactions = createDeepEqualSelector(
   (transactions) => transactions,
 );
 
+export const getApprovedAndSignedTransactions = createDeepEqualSelector(
+  (state) => {
+    const currentNetworkTransactions = getCurrentNetworkTransactions(state);
+
+    return currentNetworkTransactions.filter((transaction) =>
+      [TransactionStatus.approved, TransactionStatus.signed].includes(
+        transaction.status,
+      ),
+    );
+  },
+  (transactions) => transactions,
+);
+
 export const incomingTxListSelector = createDeepEqualSelector(
   (state) => {
     const { incomingTransactionsPreferences } = state.metamask;
@@ -64,7 +77,7 @@ export const incomingTxListSelector = createDeepEqualSelector(
     }
 
     const currentNetworkTransactions = getCurrentNetworkTransactions(state);
-    const selectedAddress = getSelectedAddress(state);
+    const { address: selectedAddress } = getSelectedInternalAccount(state);
 
     return currentNetworkTransactions.filter(
       (tx) =>
@@ -98,12 +111,15 @@ export const smartTransactionsListSelector = (state) =>
     }));
 
 export const selectedAddressTxListSelector = createSelector(
-  getSelectedAddress,
+  getSelectedInternalAccount,
   getCurrentNetworkTransactions,
   smartTransactionsListSelector,
-  (selectedAddress, transactions = [], smTransactions = []) => {
+  (selectedInternalAccount, transactions = [], smTransactions = []) => {
     return transactions
-      .filter(({ txParams }) => txParams.from === selectedAddress)
+      .filter(
+        ({ txParams }) => txParams.from === selectedInternalAccount.address,
+      )
+      .filter(({ type }) => type !== TransactionType.incoming)
       .concat(smTransactions);
   },
 );
@@ -289,9 +305,9 @@ export const nonceSortedTransactionsSelector = createSelector(
       let shouldNotBeGrouped =
         typeof nonce === 'undefined' || type === TransactionType.incoming;
 
-      ///: BEGIN:ONLY_INCLUDE_IN(build-mmi)
+      ///: BEGIN:ONLY_INCLUDE_IF(build-mmi)
       shouldNotBeGrouped = shouldNotBeGrouped || Boolean(transaction.custodyId);
-      ///: END:ONLY_INCLUDE_IN
+      ///: END:ONLY_INCLUDE_IF
 
       if (shouldNotBeGrouped) {
         const transactionGroup = {
@@ -424,7 +440,7 @@ export const nonceSortedTransactionsSelector = createSelector(
 
         // Initial Transaction Logic Cases
         // --------------------------------------------------------------------
-        // Initial Transaction: The transaciton that most likely represents the
+        // Initial Transaction: The transaction that most likely represents the
         // user's intent when creating/approving the transaction. In most cases
         // this is the first transaction of a nonce group, by time, but this
         // breaks down in the case of users with the advanced setting enabled
@@ -593,6 +609,6 @@ const TRANSACTION_APPROVAL_TYPES = [
 export function hasTransactionPendingApprovals(state) {
   return (
     hasUnapprovedTransactionsInCurrentNetwork(state) ||
-    TRANSACTION_APPROVAL_TYPES.some((type) => hasPendingApprovals(state, type))
+    hasPendingApprovals(state, TRANSACTION_APPROVAL_TYPES)
   );
 }

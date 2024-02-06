@@ -17,19 +17,8 @@ const withFixturesOptions = {
   ganacheOptions,
 };
 
-const loadExtension = async (driver) => {
-  await driver.navigate();
-  await driver.fill('#password', 'correct horse battery staple');
-  await driver.press('#password', driver.Key.ENTER);
-};
-
 const buildQuote = async (driver, options) => {
-  if (process.env.MULTICHAIN) {
-    await driver.clickElement('[data-testid="app-footer-actions-button"]');
-    await driver.clickElement('[data-testid="select-action-modal-item-swap"]');
-  } else {
-    await driver.clickElement('[data-testid="token-overview-button-swap"]');
-  }
+  await driver.clickElement('[data-testid="token-overview-button-swap"]');
   await driver.fill(
     'input[data-testid="prepare-swap-page-from-token-amount"]',
     options.amount,
@@ -196,7 +185,6 @@ const changeExchangeRate = async (driver) => {
 
 module.exports = {
   withFixturesOptions,
-  loadExtension,
   buildQuote,
   reviewQuote,
   waitForTransactionToComplete,

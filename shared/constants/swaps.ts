@@ -151,7 +151,7 @@ const SWAPS_TESTNET_CHAIN_ID = '0x539';
 
 export const SWAPS_API_V2_BASE_URL = 'https://swap.metaswap.codefi.network';
 export const SWAPS_DEV_API_V2_BASE_URL = 'https://swap.dev-api.cx.metamask.io';
-export const GAS_API_BASE_URL = 'https://gas-api.metaswap.codefi.network';
+export const GAS_API_BASE_URL = 'https://gas.api.cx.metamask.io';
 export const GAS_DEV_API_BASE_URL = 'https://gas.uat-api.cx.metamask.io';
 
 const BSC_DEFAULT_BLOCK_EXPLORER_URL = 'https://bscscan.com/';
@@ -163,6 +163,9 @@ const OPTIMISM_DEFAULT_BLOCK_EXPLORER_URL = 'https://optimistic.etherscan.io/';
 const ARBITRUM_DEFAULT_BLOCK_EXPLORER_URL = 'https://arbiscan.io/';
 const ZKSYNC_DEFAULT_BLOCK_EXPLORER_URL = 'https://explorer.zksync.io/';
 const LINEA_DEFAULT_BLOCK_EXPLORER_URL = 'https://lineascan.build/';
+
+export const SMART_SWAPS_FAQ_AND_RISK_DISCLOSURES_URL =
+  'https://support.metamask.io/hc/articles/9184393821211';
 
 export const ALLOWED_PROD_SWAPS_CHAIN_IDS = [
   CHAIN_IDS.MAINNET,

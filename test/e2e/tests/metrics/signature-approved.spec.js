@@ -64,7 +64,6 @@ describe('Signature Approved Event @no-mmi', function () {
         testSpecificMock: mockSegment,
       },
       async ({ driver, mockedEndpoint: mockedEndpoints }) => {
-        await driver.navigate();
         await unlockWallet(driver);
         await openDapp(driver);
 
@@ -113,7 +112,6 @@ describe('Signature Approved Event @no-mmi', function () {
         testSpecificMock: mockSegment,
       },
       async ({ driver, mockedEndpoint: mockedEndpoints }) => {
-        await driver.navigate();
         await unlockWallet(driver);
         await openDapp(driver);
 
@@ -162,7 +160,6 @@ describe('Signature Approved Event @no-mmi', function () {
         testSpecificMock: mockSegment,
       },
       async ({ driver, mockedEndpoint: mockedEndpoints }) => {
-        await driver.navigate();
         await unlockWallet(driver);
         await openDapp(driver);
 
@@ -210,7 +207,6 @@ describe('Signature Approved Event @no-mmi', function () {
         testSpecificMock: mockSegment,
       },
       async ({ driver, mockedEndpoint: mockedEndpoints }) => {
-        await driver.navigate();
         await unlockWallet(driver);
         await openDapp(driver);
 
@@ -263,7 +259,6 @@ describe('Signature Approved Event @no-mmi', function () {
         testSpecificMock: mockSegment,
       },
       async ({ driver, mockedEndpoint: mockedEndpoints }) => {
-        await driver.navigate();
         await unlockWallet(driver);
         await openDapp(driver);
 
@@ -273,7 +268,7 @@ describe('Signature Approved Event @no-mmi', function () {
         await driver.delay(regularDelayMs);
         await driver.clickElement('[data-testid="page-container-footer-next"]');
         await driver.clickElement(
-          '.signature-request-warning__footer__sign-button',
+          '[data-testid="signature-warning-sign-button"]',
         );
         const events = await getEventPayloads(driver, mockedEndpoints);
         assert.deepStrictEqual(events[0].properties, {

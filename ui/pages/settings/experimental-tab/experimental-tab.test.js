@@ -37,12 +37,13 @@ describe('ExperimentalTab', () => {
     const { getAllByRole } = render({ desktopEnabled: true });
     const toggle = getAllByRole('checkbox');
 
-    expect(toggle).toHaveLength(3);
+    expect(toggle).toHaveLength(5);
   });
 
   it('should disable opensea when blockaid is enabled', () => {
     const setSecurityAlertsEnabled = jest.fn();
     const setTransactionSecurityCheckEnabled = jest.fn();
+    const setPetnamesEnabled = jest.fn();
     const { getAllByRole } = render(
       { desktopEnabled: true },
       {
@@ -50,39 +51,20 @@ describe('ExperimentalTab', () => {
         transactionSecurityCheckEnabled: true,
         setSecurityAlertsEnabled,
         setTransactionSecurityCheckEnabled,
+        petnamesEnabled: true,
+        setPetnamesEnabled,
       },
     );
     const toggle = getAllByRole('checkbox');
-    fireEvent.click(toggle[0]);
+    fireEvent.click(toggle[1]);
     expect(setSecurityAlertsEnabled).toHaveBeenCalledWith(true);
     expect(setTransactionSecurityCheckEnabled).toHaveBeenCalledWith(false);
-  });
-
-  it('should show terms of use links', () => {
-    const setSecurityAlertsEnabled = jest.fn();
-    const setTransactionSecurityCheckEnabled = jest.fn();
-    const { getAllByRole } = render(
-      { desktopEnabled: true },
-      {
-        securityAlertsEnabled: false,
-        transactionSecurityCheckEnabled: true,
-        setSecurityAlertsEnabled,
-        setTransactionSecurityCheckEnabled,
-      },
-    );
-    expect(getAllByRole('link', { name: 'Terms of use' })[0]).toHaveAttribute(
-      'href',
-      'https://blockaid.io/legal/metamask-ppom-privacy-policy/',
-    );
-    expect(getAllByRole('link', { name: 'Terms of use' })[1]).toHaveAttribute(
-      'href',
-      'https://opensea.io/securityproviderterms',
-    );
   });
 
   it('should disable blockaid when opensea is enabled', () => {
     const setSecurityAlertsEnabled = jest.fn();
     const setTransactionSecurityCheckEnabled = jest.fn();
+    const setPetnamesEnabled = jest.fn();
     const { getAllByRole } = render(
       { desktopEnabled: true },
       {
@@ -90,28 +72,74 @@ describe('ExperimentalTab', () => {
         securityAlertsEnabled: true,
         setSecurityAlertsEnabled,
         setTransactionSecurityCheckEnabled,
+        petnamesEnabled: true,
+        setPetnamesEnabled,
       },
     );
     const toggle = getAllByRole('checkbox');
-    fireEvent.click(toggle[1]);
+    fireEvent.click(toggle[2]);
     expect(setTransactionSecurityCheckEnabled).toHaveBeenCalledWith(true);
     expect(setSecurityAlertsEnabled).toHaveBeenCalledWith(false);
   });
 
+  it('should show terms of use links', () => {
+    const setSecurityAlertsEnabled = jest.fn();
+    const setTransactionSecurityCheckEnabled = jest.fn();
+    const setPetnamesEnabled = jest.fn();
+    const { getAllByRole } = render(
+      { desktopEnabled: true },
+      {
+        securityAlertsEnabled: false,
+        transactionSecurityCheckEnabled: true,
+        setSecurityAlertsEnabled,
+        setTransactionSecurityCheckEnabled,
+        petnamesEnabled: true,
+        setPetnamesEnabled,
+      },
+    );
+    expect(getAllByRole('link', { name: 'Terms of use' })[0]).toHaveAttribute(
+      'href',
+      'https://opensea.io/securityproviderterms',
+    );
+  });
+
   it('should enable add account snap', async () => {
     const setAddSnapAccountEnabled = jest.fn();
+    const setPetnamesEnabled = jest.fn();
     const { getByTestId } = render(
       { desktopEnabled: true },
       {
         setAddSnapAccountEnabled,
+        petnamesEnabled: true,
+        setPetnamesEnabled,
       },
     );
 
-    const toggle = getByTestId('add-snap-account-toggle');
+    const toggle = getByTestId('add-account-snap-toggle-button');
     fireEvent.click(toggle);
 
     await waitFor(() => {
       expect(setAddSnapAccountEnabled).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it('should disable petnames', async () => {
+    const setAddSnapAccountEnabled = jest.fn();
+    const setPetnamesEnabled = jest.fn();
+    const { getByTestId } = render(
+      { desktopEnabled: true },
+      {
+        setAddSnapAccountEnabled,
+        petnamesEnabled: true,
+        setPetnamesEnabled,
+      },
+    );
+
+    const toggle = getByTestId('toggle-petnames');
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(setPetnamesEnabled).toHaveBeenCalledWith(false);
     });
   });
 });

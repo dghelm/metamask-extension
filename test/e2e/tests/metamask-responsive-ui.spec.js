@@ -1,10 +1,11 @@
 const { strict: assert } = require('assert');
 const {
   TEST_SEED_PHRASE_TWO,
-  convertToHexValue,
+  defaultGanacheOptions,
   withFixtures,
   locateAccountBalanceDOM,
   openActionMenuAndStartSendFlow,
+  unlockWallet,
 } = require('../helpers');
 const FixtureBuilder = require('../fixture-builder');
 
@@ -73,9 +74,7 @@ describe('MetaMask Responsive UI', function () {
 
         // assert balance
         const balance = await driver.findElement(
-          process.env.MULTICHAIN
-            ? '[data-testid="token-balance-overview-currency-display"]'
-            : '[data-testid="eth-overview__primary-currency"]',
+          '[data-testid="eth-overview__primary-currency"]',
         );
         assert.ok(/^0\sETH$/u.test(await balance.getText()));
       },
@@ -119,26 +118,17 @@ describe('MetaMask Responsive UI', function () {
 
   it('Send Transaction from responsive window', async function () {
     const driverOptions = { openDevToolsForTabs: true };
-    const ganacheOptions = {
-      accounts: [
-        {
-          secretKey:
-            '0x7C9529A67102755B7E6102D6D950AC5D5863C98713805CEC576B945B15B71EAC',
-          balance: convertToHexValue(25000000000000000000),
-        },
-      ],
-    };
     await withFixtures(
       {
         fixtures: new FixtureBuilder().build(),
         driverOptions,
-        ganacheOptions,
+        ganacheOptions: defaultGanacheOptions,
         title: this.test.fullTitle(),
       },
       async ({ driver }) => {
-        await driver.navigate();
-        await driver.fill('#password', 'correct horse battery staple');
-        await driver.press('#password', driver.Key.ENTER);
+        await unlockWallet(driver);
+
+        await driver.delay(1000);
 
         // Send ETH from inside MetaMask
         // starts to send a transaction

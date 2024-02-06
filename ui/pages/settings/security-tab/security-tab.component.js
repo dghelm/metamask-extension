@@ -77,10 +77,9 @@ export default class SecurityTab extends PureComponent {
     setUseCurrencyRateCheck: PropTypes.func.isRequired,
     useAddressBarEnsResolution: PropTypes.bool.isRequired,
     setUseAddressBarEnsResolution: PropTypes.func.isRequired,
-    ///: BEGIN:ONLY_INCLUDE_IN(petnames)
     useExternalNameSources: PropTypes.bool.isRequired,
     setUseExternalNameSources: PropTypes.func.isRequired,
-    ///: END:ONLY_INCLUDE_IN
+    petnamesEnabled: PropTypes.bool.isRequired,
   };
 
   state = {
@@ -729,16 +728,17 @@ export default class SecurityTab extends PureComponent {
         flexDirection={FlexDirection.Row}
         justifyContent={JustifyContent.spaceBetween}
         gap={4}
+        id="display-nft-media"
       >
         <div className="settings-page__content-item">
-          <span>{t('enableOpenSeaAPI')}</span>
+          <span>{t('displayNftMedia')}</span>
           <div className="settings-page__content-description">
-            {t('enableOpenSeaAPIDescription')}
+            {t('displayNftMediaDescription')}
           </div>
         </div>
         <div
           className="settings-page__content-item-col"
-          data-testid="enableOpenSeaAPI"
+          data-testid="displayNftMedia"
         >
           <ToggleButton
             value={openSeaEnabled}
@@ -817,7 +817,6 @@ export default class SecurityTab extends PureComponent {
     );
   }
 
-  ///: BEGIN:ONLY_INCLUDE_IN(petnames)
   renderExternalNameSourcesToggle() {
     const { t } = this.context;
     const { useExternalNameSources, setUseExternalNameSources } = this.props;
@@ -852,10 +851,9 @@ export default class SecurityTab extends PureComponent {
       </Box>
     );
   }
-  ///: END:ONLY_INCLUDE_IN
 
   render() {
-    const { warning } = this.props;
+    const { warning, petnamesEnabled } = this.props;
 
     return (
       <div className="settings-page__body">
@@ -913,18 +911,16 @@ export default class SecurityTab extends PureComponent {
           {this.renderNftDetectionToggle()}
         </div>
 
-        {
-          ///: BEGIN:ONLY_INCLUDE_IN(petnames)
-        }
-        <span className="settings-page__security-tab-sub-header">
-          {this.context.t('settingsSubHeadingSignatures')}
-        </span>
-        <div className="settings-page__content-padded">
-          {this.renderExternalNameSourcesToggle()}
-        </div>
-        {
-          ///: END:ONLY_INCLUDE_IN
-        }
+        {petnamesEnabled && (
+          <>
+            <span className="settings-page__security-tab-sub-header">
+              {this.context.t('settingsSubHeadingSignaturesAndTransactions')}
+            </span>
+            <div className="settings-page__content-padded">
+              {this.renderExternalNameSourcesToggle()}
+            </div>
+          </>
+        )}
 
         <span className="settings-page__security-tab-sub-header">
           {this.context.t('metrics')}

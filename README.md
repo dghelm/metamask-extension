@@ -14,7 +14,7 @@ To learn how to contribute to the MetaMask project itself, visit our [Internal D
 
 ## Building locally
 
-- Install [Node.js](https://nodejs.org) version 18
+- Install [Node.js](https://nodejs.org) version 20
   - If you are using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) (recommended) running `nvm use` will automatically choose the right node version for you.
 - Enable Corepack by executing the command `corepack enable` within the metamask-extension project. Corepack is a utility included with Node.js by default. It manages Yarn on a per-project basis, using the version specified by the `packageManager` property in the project's package.json file. Please note that modern releases of [Yarn](https://yarnpkg.com/getting-started/install) are not intended to be installed globally or via npm.
 - Duplicate `.metamaskrc.dist` within the root and rename it to `.metamaskrc` by running `cp .metamaskrc{.dist,}`.
@@ -81,7 +81,7 @@ For Jest debugging guide using Node.js, see [docs/tests/jest.md](docs/tests/jest
 Our e2e test suite can be run on either Firefox or Chrome.
 
 1. **required** `yarn build:test` to create a test build.
-2. run tests, targetting the browser:
+2. run tests, targeting the browser:
 
 - Firefox e2e tests can be run with `yarn test:e2e:firefox`.
 - Chrome e2e tests can be run with `yarn test:e2e:chrome`. The `chromedriver` package major version must match the major version of your local Chrome installation. If they don't match, update whichever is behind before running Chrome e2e tests.
@@ -111,13 +111,18 @@ For example, to run the `account-details` tests using Chrome, with debug logging
 
 #### Running specific builds types e2e test
 
-Differnt build types have different e2e tests sets. In order to run them look in the `packaje.json` file. You will find:
+Different build types have different e2e tests sets. In order to run them look in the `packaje.json` file. You will find:
 ```console
     "test:e2e:chrome:mmi": "SELENIUM_BROWSER=chrome node test/e2e/run-all.js --mmi",
     "test:e2e:chrome:snaps": "SELENIUM_BROWSER=chrome node test/e2e/run-all.js --snaps",
     "test:e2e:chrome:mv3": "ENABLE_MV3=true SELENIUM_BROWSER=chrome node test/e2e/run-all.js",
 ```
-Note: MMI runs a subset of MetaMask's e2e tests. To facilitate this, we have appended the `@no-mmi` tags to the names of those tests that are not applicable to this build type.
+
+
+#### Note: Running MMI e2e tests
+When running e2e on an MMI build you need to know that there are 2 separated set of tests:
+- MMI runs a subset of MetaMask's e2e tests. To facilitate this, we have appended the `@no-mmi` tags to the names of those tests that are not applicable to this build type.
+- MMI runs another specific set of e2e legacy tests which are better documented [here](test/e2e/mmi/README.md)
 
 ### Changing dependencies
 
