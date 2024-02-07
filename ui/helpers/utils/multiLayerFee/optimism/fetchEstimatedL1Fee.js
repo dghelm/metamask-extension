@@ -25,6 +25,7 @@ export default async function fetchEstimatedL1Fee(
   txMeta,
   ethersProvider,
 ) {
+  console.log('enter fetchEstimatedL1Fee');
   const chainIdAsDecimalNumber = Number(hexToDecimal(chainId));
   const provider = global.ethereumProvider
     ? new Web3Provider(global.ethereumProvider, chainIdAsDecimalNumber)
@@ -41,8 +42,16 @@ export default async function fetchEstimatedL1Fee(
     OPTIMISM_GAS_PRICE_ORACLE_ABI,
     provider,
   );
+  console.log('serializing tx...');
   const serializedTransaction =
     buildUnserializedTransaction(txMeta).serialize();
-  const result = await contract.getL1Fee(serializedTransaction);
-  return result?.toHexString();
+  console.log('calling getL1Fee Contract');
+  try {
+    const result = await contract.getL1Fee(serializedTransaction);
+    console.log('l1feeResult', result);
+    return result?.toHexString();
+  } catch (error) {
+    console.error(error);
+    return '0x0';
+  }
 }

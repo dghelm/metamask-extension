@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 
@@ -24,9 +24,9 @@ import {
   TextColor,
 } from '../../../../helpers/constants/design-system';
 import { useDraftTransactionWithTxParams } from '../../../../hooks/useDraftTransactionWithTxParams';
-import { getNativeCurrency } from '../../../../ducks/metamask/metamask';
-import MultilayerFeeMessage from '../../multilayer-fee-message/multi-layer-fee-message';
 import { Icon, IconName, Text } from '../../../component-library';
+import fetchEstimatedL1Fee from '../../../../helpers/utils/multiLayerFee/fetchEstimatedL1Fee';
+import { sumHexes } from '../../../../../shared/modules/conversion.utils';
 
 const renderHeartBeatIfNotInTest = () =>
   process.env.IN_TEST ? null : <LoadingHeartBeat />;
@@ -39,7 +39,6 @@ const ConfirmLegacyGasDisplay = ({ 'data-testid': dataTestId } = {}) => {
   const isMultiLayerFeeNetwork = useSelector(getIsMultiLayerFeeNetwork);
   const useCurrencyRateCheck = useSelector(getUseCurrencyRateCheck);
   const { useNativeCurrencyAsPrimaryCurrency } = useSelector(getPreferences);
-  const nativeCurrency = useSelector(getNativeCurrency);
   const unapprovedTxs = useSelector(getUnapprovedTransactions);
   const transactionData = useDraftTransactionWithTxParams();
   const txData = useSelector((state) => txDataSelector(state));
@@ -51,16 +50,38 @@ const ConfirmLegacyGasDisplay = ({ 'data-testid': dataTestId } = {}) => {
     (state) => transactionFeeSelector(state, transaction),
   );
 
+  const [estimatedL1Fees, setEstimatedL1Fees] = useState(null);
+
+  useEffect(() => {
+    if (isMultiLayerFeeNetwork) {
+      fetchEstimatedL1Fee(txData?.chainId, txData)
+        .then((result) => {
+          setEstimatedL1Fees(result);
+        })
+        .catch((_err) => {
+          setEstimatedL1Fees(null);
+        });
+    }
+  }, [isMultiLayerFeeNetwork, txData]);
+
+  const getTransactionFeeTotal = useMemo(() => {
+    if (isMultiLayerFeeNetwork) {
+      return sumHexes(hexMinimumTransactionFee, estimatedL1Fees || 0);
+    }
+
+    return hexMinimumTransactionFee;
+  }, [isMultiLayerFeeNetwork, hexMinimumTransactionFee, estimatedL1Fees]);
+
   if (isMultiLayerFeeNetwork) {
     return [
       <TransactionDetailItem
         key="legacy-total-item"
         data-testid={dataTestId}
-        detailTitle={t('transactionDetailLayer2GasHeading')}
+        detailTitle={t('estimatedFee')}
         detailTotal={
           <UserPreferencedCurrencyDisplay
             type={PRIMARY}
-            value={hexMinimumTransactionFee}
+            value={getTransactionFeeTotal}
             hideLabel={!useNativeCurrencyAsPrimaryCurrency}
             numberOfDecimals={18}
           />
@@ -69,19 +90,13 @@ const ConfirmLegacyGasDisplay = ({ 'data-testid': dataTestId } = {}) => {
           useCurrencyRateCheck && (
             <UserPreferencedCurrencyDisplay
               type={SECONDARY}
-              value={hexMinimumTransactionFee}
+              value={getTransactionFeeTotal}
               hideLabel={Boolean(useNativeCurrencyAsPrimaryCurrency)}
             />
           )
         }
         noBold
         flexWidthValues
-      />,
-      <MultilayerFeeMessage
-        key="confirm-layer-1"
-        transaction={txData}
-        layer2fee={hexMinimumTransactionFee}
-        nativeCurrency={nativeCurrency}
       />,
     ];
   }

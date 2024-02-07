@@ -60,6 +60,7 @@ import { KeyringType } from '../../../shared/constants/keyring';
 ///: END:ONLY_INCLUDE_IF
 import { isHardwareKeyring } from '../../helpers/utils/hardware';
 import FeeDetailsComponent from '../../components/app/fee-details-component/fee-details-component';
+import fetchEstimatedL1Fee from '../../helpers/utils/multiLayerFee/fetchEstimatedL1Fee';
 
 export default class ConfirmTransactionBase extends Component {
   static contextTypes = {
@@ -154,6 +155,7 @@ export default class ConfirmTransactionBase extends Component {
     tokenSymbol: PropTypes.string,
     updateTransaction: PropTypes.func,
     isUsingPaymaster: PropTypes.bool,
+    isMultiLayerFeeNetwork: PropTypes.bool,
     isSigningOrSubmitting: PropTypes.bool,
   };
 
@@ -182,14 +184,33 @@ export default class ConfirmTransactionBase extends Component {
       tryReverseResolveAddress,
       isEthGasPrice,
       setDefaultHomeActiveTabName,
+      hexMinimumTransactionFee,
+      isMultiLayerFeeNetwork,
+      txData,
     } = this.props;
     const {
       customNonceValue: prevCustomNonceValue,
       nextNonce: prevNextNonce,
       toAddress: prevToAddress,
       transactionStatus: prevTxStatus,
+      hexMinimumTransactionFee: prevHexMinimumTransactionFee,
       isEthGasPrice: prevIsEthGasPrice,
     } = prevProps;
+
+    if (
+      isMultiLayerFeeNetwork &&
+      (!this.state.estimatedL1Fees ||
+        prevHexMinimumTransactionFee !== hexMinimumTransactionFee)
+    ) {
+      console.log('fetching estimated L1 fees in confirm transaction base');
+      fetchEstimatedL1Fee(txData?.chainId, txData).then((result) => {
+        console.log('setting state', result);
+        this.setState({
+          estimatedL1Fees: result,
+        });
+      });
+    }
+
     const statusUpdated = transactionStatus !== prevTxStatus;
     const txDroppedOrConfirmed =
       transactionStatus === TransactionStatus.dropped ||
@@ -343,6 +364,7 @@ export default class ConfirmTransactionBase extends Component {
       useCurrencyRateCheck,
       tokenSymbol,
       isUsingPaymaster,
+      isMultiLayerFeeNetwork,
     } = this.props;
 
     const { t } = this.context;
@@ -360,6 +382,18 @@ export default class ConfirmTransactionBase extends Component {
     const networkName = NETWORK_TO_NAME_MAP[txData.chainId];
 
     const getTotalAmount = (useMaxFee) => {
+      if (isMultiLayerFeeNetwork) {
+        // TODO: Sort out the best way to have estimateL1Fees in state accessible by various components.
+        const l1Fees = this.state.estimatedL1Fees || '0x00';
+
+        const totalFees = addHexes(
+          l1Fees,
+          useMaxFee ? hexMaximumTransactionFee : hexMinimumTransactionFee,
+        );
+
+        return addHexes(txData.txParams.value, totalFees);
+      }
+
       return addHexes(
         txData.txParams.value,
         useMaxFee ? hexMaximumTransactionFee : hexMinimumTransactionFee,

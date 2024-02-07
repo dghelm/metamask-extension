@@ -44,6 +44,7 @@ export default function FeeDetailsComponent({
     maximumCostInHexWei: hexMaximumTransactionFee,
     minimumCostInHexWei: hexMinimumTransactionFee,
   } = useGasFeeContext();
+
   useEffect(() => {
     if (isMultiLayerFeeNetwork) {
       fetchEstimatedL1Fee(txData?.chainId, txData)
@@ -139,7 +140,7 @@ export default function FeeDetailsComponent({
         <Box display={Display.Flex} flexDirection={FlexDirection.Column}>
           {isMultiLayerFeeNetwork && (
             <TransactionDetailItem
-              detailTitle={t('optimismFees')}
+              detailTitle={t('executionFee')}
               detailText={
                 useCurrencyRateCheck &&
                 renderTotalDetailText(hexMinimumTransactionFee)

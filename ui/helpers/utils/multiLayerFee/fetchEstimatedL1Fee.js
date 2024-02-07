@@ -17,8 +17,10 @@ export default async function fetchEstimatedL1Fee(
   ethersProvider,
 ) {
   const params = [chainId, txMeta, ethersProvider];
+  console.log('entering fetchEstimatedL1Fee', params);
 
   if (isOpStack(chainId)) {
+    console.log('OpStack!');
     return await fetchEstimatedL1FeeOptimism(...params);
   } else if (isScroll(chainId)) {
     return await fetchEstimatedL1FeeScroll(...params);
